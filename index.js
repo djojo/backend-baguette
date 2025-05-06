@@ -1,11 +1,20 @@
+// Charger les variables d'environnement depuis le fichier .env
+require('dotenv').config();
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const OpenAI = require('openai');
 
 // Initialisation de l'application Express
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3005;
+
+// Initialisation du client OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // Assurez-vous de définir cette variable d'environnement
+});
 
 // Middleware pour parser le JSON
 app.use(bodyParser.json());
@@ -193,9 +202,122 @@ app.get('/', (req, res) => {
           { nom: 'etape', description: 'Étape du process (ex: Pétrissage, Apprêt, Cuisson)' },
           { nom: 'defaut', description: 'Type de défaut observé (ex: Consistance ferme, Croûte épaisse)' }
         ]
+      },
+      {
+        method: 'POST',
+        path: '/api/assistant',
+        description: 'Envoyer un message à l\'assistant OpenAI et obtenir une réponse',
+        parametres: [
+          { nom: 'message', description: 'Le texte à envoyer à l\'assistant OpenAI', location: 'body' },
+          { nom: 'thread_id', description: 'ID optionnel d\'un thread existant pour continuer la conversation', location: 'body' }
+        ],
+        reponse: [
+          { nom: 'success', description: 'Indique si la requête a réussi' },
+          { nom: 'thread_id', description: 'ID du thread utilisé (nouveau ou existant) à conserver pour continuer la conversation' },
+          { nom: 'response', description: 'Réponse textuelle de l\'assistant' }
+        ]
       }
     ]
   });
+});
+
+// Route pour l'assistant OpenAI
+app.post('/api/assistant', async (req, res) => {
+  try {
+    const { message, thread_id } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Le paramètre "message" est requis dans le corps de la requête' 
+      });
+    }
+    
+    console.log("Message reçu pour l'assistant:", message);
+    
+    // Utiliser un thread existant ou en créer un nouveau
+    let thread;
+    if (thread_id) {
+      console.log("Utilisation du thread existant:", thread_id);
+      try {
+        // Vérifier si le thread existe
+        thread = await openai.beta.threads.retrieve(thread_id);
+      } catch (error) {
+        console.error("Erreur lors de la récupération du thread:", error);
+        return res.status(404).json({
+          success: false,
+          message: `Le thread avec l'ID ${thread_id} n'existe pas ou est inaccessible`
+        });
+      }
+    } else {
+      // Créer un nouveau thread
+      console.log("Création d'un nouveau thread");
+      thread = await openai.beta.threads.create();
+    }
+    
+    // Ajouter un message au thread
+    await openai.beta.threads.messages.create(thread.id, {
+      role: "user",
+      content: message
+    });
+    
+    // Exécuter l'assistant sur le thread
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: "asst_8u6FIsS4Nlg06BjMoMpYjTgr"
+    });
+    
+    // Attendre que l'exécution soit terminée
+    let runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+    
+    // Vérifier l'état toutes les 500ms jusqu'à ce qu'il soit terminé
+    while (runStatus.status !== "completed") {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      
+      // Gérer les erreurs potentielles
+      if (runStatus.status === "failed") {
+        return res.status(500).json({ 
+          success: false, 
+          message: 'L\'exécution de l\'assistant a échoué', 
+          error: runStatus.last_error 
+        });
+      }
+    }
+    
+    // Récupérer les messages du thread
+    const messages = await openai.beta.threads.messages.list(thread.id);
+    
+    // Récupérer la dernière réponse de l'assistant
+    const assistantMessages = messages.data.filter(msg => msg.role === "assistant");
+    
+    if (assistantMessages.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Aucune réponse de l\'assistant n\'a été trouvée' 
+      });
+    }
+    
+    // Récupérer le contenu textuel de la dernière réponse
+    const lastMessage = assistantMessages[0];
+    const textContent = lastMessage.content
+      .filter(content => content.type === "text")
+      .map(content => content.text.value)
+      .join("\n");
+    
+    res.json({ 
+      success: true, 
+      thread_id: thread.id,
+      response: textContent
+    });
+    
+  } catch (error) {
+    console.error('Erreur lors de l\'appel à l\'assistant OpenAI:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Une erreur s\'est produite lors de l\'appel à l\'assistant OpenAI',
+      error: error.message
+    });
+  }
 });
 
 // Middleware de gestion des erreurs
