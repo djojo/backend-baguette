@@ -1,3 +1,55 @@
+# Environnement et configuration
 .env
 .env.local
-node_modules
+.env.development
+.env.test
+.env.production
+.env*.local
+
+# Dépendances
+/node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Base de données
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Système d'exploitation
+.DS_Store
+Thumbs.db
+.directory
+
+# Éditeurs et IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+.factorypath
+
+# Fichiers de build et de distribution
+/dist
+/build
+/coverage
+.nyc_output
+/*.tgz
+
+# Fichiers temporaires
+/tmp
+/temp
