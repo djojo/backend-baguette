@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Boulangerie</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f7f2;
+            color: #5d4037;
+        }
+        h1, h2 {
+            color: #795548;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, button {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+        }
+        button {
+            background-color: #8d6e63;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #6d4c41;
+        }
+        .result {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .parameter {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #fff8e1;
+            border-left: 4px solid #ffb74d;
+            border-radius: 4px;
+        }
+        .parameter-high {
+            border-left-color: #e53935;
+            background-color: #ffebee;
+        }
+        .parameter-medium {
+            border-left-color: #fb8c00;
+            background-color: #fff3e0;
+        }
+        .parameter-low {
+            border-left-color: #43a047;
+            background-color: #e8f5e9;
+        }
+        .description {
+            font-weight: bold;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #8d6e63;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Diagnostic Boulangerie</h1>
+    
+    <div class="container">
+        <h2>Formulaire de diagnostic</h2>
+        <form id="diagnostic-form">
+            <div>
+                <label for="localisation">Localisation:</label>
+                <select id="localisation" name="localisation">
+                    <option value="">-- Sélectionner --</option>
+                    <option value="Défauts de la pâte">Défauts de la pâte</option>
+                    <option value="Défauts du pain">Défauts du pain</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="etape">Étape du process:</label>
+                <select id="etape" name="etape">
+                    <option value="">-- Sélectionner --</option>
+                    <!-- Options dynamiques seront ajoutées par JavaScript -->
+                </select>
+            </div>
+            
+            <div>
+                <label for="defaut">Défaut observé:</label>
+                <select id="defaut" name="defaut">
+                    <option value="">-- Sélectionner --</option>
+                    <!-- Options dynamiques seront ajoutées par JavaScript -->
+                </select>
+            </div>
+            
+            <button type="submit">Obtenir le diagnostic</button>
+        </form>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Chargement en cours...</p>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+    
+    <script>
+        // Configuration des étapes et défauts selon la localisation sélectionnée
+        const optionsData = {
+            "Défauts de la pâte": {
+                etapes: ["Pétrissage (début)", "Pétrissage (fin)", "Pointage", "Travail de la pâte", "Apprêt", "Mise au four", "Cuisson"],
+                defauts: {
+                    "Pétrissage (début)": ["Consistance ferme", "Consistance molle", "Se lisse lentement", "Se lisse rapidement"],
+                    "Pétrissage (fin)": ["Ne se lisse pas", "Extensibilité excessive", "Cassante", "Elasticité excessive", "Terreuse", "Collante", "Relâche", "Ferme", "Molle"],
+                    "Pointage": ["Fermentation lente", "Fermentation rapide", "Pousse plat", "Pousse trop rond"],
+                    "Travail de la pâte": ["Qui séche", "Suintante", "Collante", "Excès de force", "Manque de force", "Extensibilité excessive", "Courte", "Fermentation lente", "Fermentation rapide"],
+                    "Apprêt": ["Qui séche", "Suintante", "Collante", "Fermentation lente", "Fermentation rapide", "Qui relâche", "Qui déchire", "Poreuse", "Qui cloque"],
+                    "Mise au four": ["Qui séche", "Suintante", "Collante", "Relâche avant le coup de lame", "Relâche après le coup de lame"],
+                    "Cuisson": ["Se développe peu", "Se ressere", "Relâche"]
+                }
+            },
+            "Défauts du pain": {
+                etapes: ["Aspect extérieur", "Aspect mie"],
+                defauts: {
+                    "Aspect extérieur": ["Section ronde", "Section plate", "Croûte molle", "Croûte dure", "Croûte sèche", "Croûte épaissee", "Croûte fine", "Croûte grosse cloque", "Croûte petite cloque", "Croûte écaillée", "Croûte décollée", "Couleur rouge", "Couleur pâle", "Couleur terne", "Couleur lustrée", "Coups de lame non jeté", "Coups de lame irrégulier", "Coups de lame déchiré", "Manque de volume", "Cintrage des pains longs", "Corsetage des pains en moule", "Particules noires sous le pain", "Pain ferré"],
+                    "Aspect mie": ["Couleur crème", "Couleur blanche", "Couleur grise", "Collante", "Filante", "Sèche", "Manque de souplesse", "Manque d'élasticité", "Rassissement rapide", "Emiettement rapide", "Alvéolage irrégulier", "Alvéolage serré", "Présence de caverne", "Parois fines", "Parois épaisses", "Odeur anormale", "Moisissures (pain tranché)"]
+                }
+            }
+        };
+
+        // Mise à jour des options d'étapes selon la localisation sélectionnée
+        document.getElementById('localisation').addEventListener('change', function() {
+            const localisationValue = this.value;
+            const etapeSelect = document.getElementById('etape');
+            const defautSelect = document.getElementById('defaut');
+            
+            // Réinitialiser les sélections
+            etapeSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+            defautSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+            
+            if (localisationValue && optionsData[localisationValue]) {
+                // Ajouter les options d'étapes
+                optionsData[localisationValue].etapes.forEach(etape => {
+                    const option = document.createElement('option');
+                    option.value = etape;
+                    option.textContent = etape;
+                    etapeSelect.appendChild(option);
+                });
+            }
+        });
+        
+        // Mise à jour des options de défauts selon l'étape sélectionnée
+        document.getElementById('etape').addEventListener('change', function() {
+            const localisationValue = document.getElementById('localisation').value;
+            const etapeValue = this.value;
+            const defautSelect = document.getElementById('defaut');
+            
+            // Réinitialiser les défauts
+            defautSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+            
+            if (localisationValue && etapeValue && 
+                optionsData[localisationValue] && 
+                optionsData[localisationValue].defauts[etapeValue]) {
+                // Ajouter les options de défauts
+                optionsData[localisationValue].defauts[etapeValue].forEach(defaut => {
+                    const option = document.createElement('option');
+                    option.value = defaut;
+                    option.textContent = defaut;
+                    defautSelect.appendChild(option);
+                });
+            }
+        });
+        
+        // Gestion du formulaire
+        document.getElementById('diagnostic-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const localisation = document.getElementById('localisation').value;
+            const etape = document.getElementById('etape').value;
+            const defaut = document.getElementById('defaut').value;
+            
+            // Vérifier qu'au moins un paramètre est spécifié
+            if (!localisation && !etape && !defaut) {
+                alert('Veuillez spécifier au moins un critère de recherche.');
+                return;
+            }
+            
+            // Construire l'URL de l'API
+            let apiUrl = '/api/diagnostic?';
+            if (localisation) apiUrl += `localisation=${encodeURIComponent(localisation)}&`;
+            if (etape) apiUrl += `etape=${encodeURIComponent(etape)}&`;
+            if (defaut) apiUrl += `defaut=${encodeURIComponent(defaut)}&`;
+            
+            // Supprimer le dernier '&' si présent
+            apiUrl = apiUrl.endsWith('&') ? apiUrl.slice(0, -1) : apiUrl;
+            
+            // Afficher le chargement
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('result').textContent = `Erreur lors de la récupération des données: ${error.message}`;
+                document.getElementById('result').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+        
+        // Affichage des résultats
+        function displayResults(data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+            
+            if (!data.success || !data.data || data.data.length === 0) {
+                resultDiv.innerHTML = '<p>Aucun résultat trouvé.</p>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            data.data.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'container';
+                
+                const title = document.createElement('h3');
+                title.textContent = `${item.localisation} - ${item.etape} - ${item.defaut}`;
+                itemDiv.appendChild(title);
+                
+                if (item.parametres && item.parametres.length > 0) {
+                    const parametresHeader = document.createElement('h4');
+                    parametresHeader.textContent = 'Paramètres par ordre d\'importance:';
+                    itemDiv.appendChild(parametresHeader);
+                    
+                    item.parametres.forEach(param => {
+                        const paramDiv = document.createElement('div');
+                        paramDiv.className = 'parameter';
+                        
+                        // Ajouter une classe selon la valeur pour le styling
+                        if (param.valeur === 3) {
+                            paramDiv.classList.add('parameter-high');
+                        } else if (param.valeur === 2) {
+                            paramDiv.classList.add('parameter-medium');
+                        } else {
+                            paramDiv.classList.add('parameter-low');
+                        }
+                        
+                        const descElem = document.createElement('div');
+                        descElem.className = 'description';
+                        descElem.textContent = `${param.description} (${param.valeur}/3)`;
+                        paramDiv.appendChild(descElem);
+                        
+                        const catElem = document.createElement('div');
+                        catElem.textContent = `Catégorie: ${param.categorie} > ${param.sous_categorie}`;
+                        paramDiv.appendChild(catElem);
+                        
+                        itemDiv.appendChild(paramDiv);
+                    });
+                } else {
+                    const noParams = document.createElement('p');
+                    noParams.textContent = 'Aucun paramètre trouvé.';
+                    itemDiv.appendChild(noParams);
+                }
+                
+                resultDiv.appendChild(itemDiv);
+            });
+            
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html> 
