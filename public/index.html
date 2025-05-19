@@ -5,144 +5,320 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnostic Boulangerie</title>
     <style>
+        :root {
+            --primary-color: #d4a373;
+            --secondary-color: #bc6c25;
+            --background-color: #fefae0;
+            --text-color: #4a4e69;
+            --container-bg: #ffffff;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f9f7f2;
-            color: #5d4037;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
-        h1, h2 {
-            color: #795548;
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo svg {
+            width: 70px;
+            height: 70px;
+            fill: white;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            text-align: center;
+            font-size: 2.5em;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            font-size: 1.8em;
             margin-bottom: 20px;
         }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
         form {
             margin-bottom: 20px;
         }
+
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
         }
-        select, button {
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+
+        select, button, input {
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
             width: 100%;
             max-width: 400px;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
+
+        select:focus, input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.2);
+        }
+
         button {
-            background-color: #8d6e63;
+            background-color: var(--primary-color);
             color: white;
             border: none;
             cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
+
         button:hover {
-            background-color: #6d4c41;
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
         }
-        .result {
-            background-color: #f5f5f5;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-            white-space: pre-wrap;
-            overflow-x: auto;
-        }
+
         .parameter {
-            margin-bottom: 10px;
-            padding: 10px;
-            background-color: #fff8e1;
-            border-left: 4px solid #ffb74d;
-            border-radius: 4px;
+            margin-bottom: 15px;
+            padding: 15px;
+            /* background-color: #fff; */
+            /* border-left: 4px solid var(--primary-color); */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
+
         .parameter-high {
-            border-left-color: #e53935;
-            background-color: #ffebee;
+            background-color: #e63946;
+            color: white;
         }
+
         .parameter-medium {
-            border-left-color: #fb8c00;
-            background-color: #fff3e0;
+            background-color: #f4a261;
+            color: white;
         }
+
         .parameter-low {
-            border-left-color: #43a047;
-            background-color: #e8f5e9;
+            background-color: #2a9d8f;
+            color: white;
         }
+
         .description {
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 5px;
         }
+
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
         }
+
         .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
+            border: 4px solid rgba(212, 163, 115, 0.1);
             border-radius: 50%;
-            border-top: 4px solid #8d6e63;
+            border-top: 4px solid var(--primary-color);
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .result {
+            background-color: #FDFAE0;
+            /* padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); */
+        }
+
+        #password-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #password-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        #password-container h2 {
+            margin-top: 0;
+        }
+
+        #password-container p {
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        #password-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #password-error {
+            color: #e63946;
+            margin-top: 10px;
+            display: none;
+        }
+
+        #app-content {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <h1>Diagnostic Boulangerie</h1>
-    
-    <div class="container">
-        <h2>Formulaire de diagnostic</h2>
-        <form id="diagnostic-form">
-            <div>
-                <label for="localisation">Localisation:</label>
-                <select id="localisation" name="localisation">
-                    <option value="">-- Sélectionner --</option>
-                    <option value="Défauts de la pâte">Défauts de la pâte</option>
-                    <option value="Défauts du pain">Défauts du pain</option>
-                </select>
+    <div id="password-screen">
+        <div id="password-container">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                </svg>
             </div>
-            
-            <div>
-                <label for="etape">Étape du process:</label>
-                <select id="etape" name="etape">
-                    <option value="">-- Sélectionner --</option>
-                    <!-- Options dynamiques seront ajoutées par JavaScript -->
-                </select>
+            <h2>Diagnostic Boulangerie</h2>
+            <p>Veuillez entrer le mot de passe pour accéder à l'application</p>
+            <form id="password-form">
+                <input type="password" id="password-input" placeholder="Mot de passe" required>
+                <button type="submit">Accéder</button>
+                <div id="password-error">Mot de passe incorrect. Veuillez réessayer.</div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-content">
+        <div class="logo-container">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                </svg>
             </div>
-            
-            <div>
-                <label for="defaut">Défaut observé:</label>
-                <select id="defaut" name="defaut">
-                    <option value="">-- Sélectionner --</option>
-                    <!-- Options dynamiques seront ajoutées par JavaScript -->
-                </select>
-            </div>
-            
-            <button type="submit">Obtenir le diagnostic</button>
-        </form>
-        
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>Chargement en cours...</p>
+            <h1>Diagnostic Boulangerie</h1>
         </div>
         
-        <div id="result" class="result" style="display: none;"></div>
+        <div class="container">
+            <h2>Formulaire de diagnostic</h2>
+            <form id="diagnostic-form">
+                <div>
+                    <label for="localisation">Localisation:</label>
+                    <select id="localisation" name="localisation">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="Défauts de la pâte">Défauts de la pâte</option>
+                        <option value="Défauts du pain">Défauts du pain</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="etape">Étape du process:</label>
+                    <select id="etape" name="etape">
+                        <option value="">-- Sélectionner --</option>
+                        <!-- Options dynamiques seront ajoutées par JavaScript -->
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="defaut">Défaut observé:</label>
+                    <select id="defaut" name="defaut">
+                        <option value="">-- Sélectionner --</option>
+                        <!-- Options dynamiques seront ajoutées par JavaScript -->
+                    </select>
+                </div>
+                
+                <button type="submit">Obtenir le diagnostic</button>
+            </form>
+            
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Chargement en cours...</p>
+            </div>
+            
+            <div id="result" class="result" style="display: none;"></div>
+        </div>
     </div>
     
     <script>
+        // Système de protection par mot de passe
+        document.getElementById('password-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = document.getElementById('password-input').value;
+            
+            if (password === 'baguette') {
+                // Mot de passe correct
+                document.getElementById('password-screen').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+                
+                // Enregistrer l'authentification dans localStorage pour les visites futures
+                localStorage.setItem('authenticated', 'true');
+            } else {
+                // Mot de passe incorrect
+                document.getElementById('password-error').style.display = 'block';
+                document.getElementById('password-input').value = '';
+            }
+        });
+        
+        // Vérifier si l'utilisateur est déjà authentifié
+        window.addEventListener('DOMContentLoaded', function() {
+            const isAuthenticated = localStorage.getItem('authenticated') === 'true';
+            
+            if (isAuthenticated) {
+                document.getElementById('password-screen').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+            }
+        });
+
         // Configuration des étapes et défauts selon la localisation sélectionnée
         const optionsData = {
             "Défauts de la pâte": {
@@ -266,7 +442,7 @@
             
             data.data.forEach(item => {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'container';
+                itemDiv.className = 'container result';
                 
                 const title = document.createElement('h3');
                 title.textContent = `${item.localisation} - ${item.etape} - ${item.defaut}`;
@@ -292,7 +468,7 @@
                         
                         const descElem = document.createElement('div');
                         descElem.className = 'description';
-                        descElem.textContent = `${param.description} (${param.valeur}/3)`;
+                        descElem.textContent = param.description;
                         paramDiv.appendChild(descElem);
                         
                         const catElem = document.createElement('div');
